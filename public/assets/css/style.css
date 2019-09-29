@@ -21,7 +21,7 @@ body {
 }
 
 #space-taker-upper {
-    height: 50vh;
+    min-height: 50vh;
     width: 75%;
     background-color: #297f99;
 }
