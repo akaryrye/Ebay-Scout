@@ -4,6 +4,7 @@
   "description": "Boilerplate app with express, handlebars, sequelize, jquery, and materialize",
   "main": "server.js",
   "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
     "cookie-parser": "^1.4.4",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
