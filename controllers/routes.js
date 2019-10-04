@@ -5,4 +5,8 @@ module.exports = function(app) {
     res.render("index");
   });
 
+  app.get("/find", function(req, res) {
+    res.render("find");
+  });
+
 };
