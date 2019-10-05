@@ -1,2 +1,8 @@
     <h2>Dashboard</h2>
-    <h5>Hurray! you are logged in.</h5>
+    <h5>Hurray {{user.first}}!! you are now logged in.</h5>
+
+    <ul id="user-info">
+        <li><h5>User Information:</h5></li>
+        <li>Name: {{ user.first }} {{ user.last }}</li>
+        <li>Member since: {{ user.createdAt }}</li>
+    </ul>

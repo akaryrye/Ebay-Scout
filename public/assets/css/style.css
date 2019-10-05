@@ -34,3 +34,10 @@ body {
     width: 60%;
     margin: 0 auto;
 }
+
+#user-info {
+    background-color:  #6b7db6;
+    border-radius: 10px;
+    width: 50%;
+    margin: 0 auto;
+}

@@ -9,4 +9,8 @@ module.exports = function(app) {
     res.render("find");
   });
 
+  app.get("/store", function(req, res) {
+    res.render("store");
+  });
+
 };
