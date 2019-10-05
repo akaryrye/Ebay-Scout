@@ -29,7 +29,7 @@ $("Document").ready(function() {
                         <img src=${image} />
                     </div>
                     <div class="card-action">
-                        <a href=${link}>View on Ebay</a>
+                        <a href=${link} target="_blank">View on Ebay</a>
                         <p> Current Price: ${price} ${currency} </p>
                     </div>
                 </div></div>
