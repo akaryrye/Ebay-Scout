@@ -37,19 +37,30 @@ $("Document").ready(function() {
         }
     }
 
-    function paginateItems(page, totalPages) {
-        
+    function paginateSearchItems(page, totalPages) {
         if (totalPages < 20) {
             for(let i = 1; i <= totalPages; i++) {
-                $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
+                $("#pagination").append(`<button class="page-key btn" data-val="${i}">${i}</button>`);
             }
         } else {
-            for(let i = page; i <= page + 20; i++) {
+            for(let i = page; i <= page + 19; i++) {
                 if (i > totalPages) break;
-                $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
+                $("#pagination").append(`<button class="page-key btn" data-val="${i}">${i}</button>`);
             }
         }
-        
+    }
+
+    function paginateCategoryItems(page, totalPages) {
+        if (totalPages < 20) {
+            for(let i = 1; i <= totalPages; i++) {
+                $("#pagination").append(`<button class="page-cat btn" data-val="${i}">${i}</button>`);
+            }
+        } else {
+            for(let i = page; i <= page + 19; i++) {
+                if (i > totalPages) break;
+                $("#pagination").append(`<button class="page-cat btn" data-val="${i}">${i}</button>`);
+            }
+        }
     }
     
     function keywordSearch(url) {
@@ -61,21 +72,30 @@ $("Document").ready(function() {
             type: "GET"
         }).then(function(result) {
             let data = JSON.parse(result);
-            if (document.location.pathname === "/find") {
-                let items = data.findItemsByKeywordsResponse[0].searchResult[0].item;
-                page = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].pageNumber[0]);
-                let totalPages = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].totalPages[0]);
-                displayItems(items);
-                paginateItems(page, totalPages); 
-            } else if (document.location.pathname === "/store") {
-                let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
-                page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
-                let totalPages = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0]);
-                displayItems(items);
-                paginateItems(page, totalPages); 
-            }
+            page = data.findItemsByKeywordsResponse[0].paginationOutput[0].pageNumber[0];
+            let items = data.findItemsByKeywordsResponse[0].searchResult[0].item;
+            let totalPages = data.findItemsByKeywordsResponse[0].paginationOutput[0].totalPages[0];
             
+            displayItems(items);
+            paginateSearchItems(parseInt(page), parseInt(totalPages));
+        });
+    }
+
+    function keywordStoreSearch(url) {
+        $("#results").empty();
+        $("#pagination").empty();
+
+        $.ajax({
+            url: url,
+            type: "GET"
+        }).then(function(result) {
+            let data = JSON.parse(result);
+            page = data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0];
+            let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
+            let totalPages = data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0];
             
+            displayItems(items);
+            paginateSearchItems(parseInt(page), parseInt(totalPages));
         });
     }
 
@@ -87,52 +107,58 @@ $("Document").ready(function() {
             url: url,
             type: "GET"
         }).then(function(result) {
-            console.log(result);
             let data = JSON.parse(result);
             let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
             page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
             let totalPages = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0]);
             displayItems(items);
-            paginateItems(page, totalPages);
+            paginateCategoryItems(page, totalPages);
         });
     }
  
-    // General Ebay search by keyword
+    // Search by keyword
     $("#search-btn").on("click", function() {
-        let input = $('#searchInput').val().trim();
-        let keyword = input.replace(" ", "%20");
         page = "1";
-
-        if (document.location.pathname === "/find") {
-            let url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
-            keywordSearch(url);
-        } else if (document.location.pathname === "/store") {
-            let url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
-            keywordSearch(url);
-        }
+        let keyword = $('#searchInput').val().trim().replace(" ", "%20");
+        let url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
+        keywordSearch(url);
     });
 
-    // Go to the next page of results
-    $("#pagination").on("click", ".page-btn", function(e) {
-        page = $(this).data("val");
-
-        if (document.location.pathname === "/find") {
-            let input = $('#searchInput').val().trim();
-            let keyword = input.replace(" ", "%20");
-            url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
-            keywordSearch(url);
-        } else if (document.location.pathname === "/store") {
-            console.log(currentCategory + ", page# - " + page)
-            url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
-            categorySearch(url);
-        }
-    });
+    // Search the store by keyword
+    $("#store-search-btn").on("click", function() {
+        page = "1";
+        let keyword = $('#searchInput').val().trim().replace(" ", "%20");
+        let url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
+        keywordStoreSearch(url);
+    }); 
 
     // Category buttons on click, find all matching items in store
     $("#category-buttons").on("click", ".category-btn", function() {
         currentCategory = $(this).data("val");
-        let url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
         page = "1";
+        let url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
+        categorySearch(url);
+    });
+
+    // Go to the next page of results
+    $("#pagination").on("click", ".page-key", function() {
+        page = $(this).data("val");
+        let input = $('#searchInput').val().trim();
+        let keyword = input.replace(" ", "%20");
+        let url = "";
+
+        if (document.location.pathname === "/find") {
+            url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
+            keywordSearch(url);
+        } else if (document.location.pathname === "/store") {
+            url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
+            keywordStoreSearch(url);
+        }
+    });
+
+    $("#pagination").on("click", ".page-cat", function() {
+        page = $(this).data("val");
+        url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
         categorySearch(url);
     });
 
@@ -156,8 +182,6 @@ $("Document").ready(function() {
                     $("#category-buttons").append(`<button class="category-btn btn" data-val="${categoryId}">${category}</button>`);
                 }
             }
-
-            console.log(categories);
         });
     }
 
