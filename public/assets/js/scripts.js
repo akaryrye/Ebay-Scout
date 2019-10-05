@@ -44,7 +44,7 @@ $("Document").ready(function() {
                 $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
             }
         } else {
-            for(let i = parseInt(page); i <= parseInt(totalPages); i++) {
+            for(let i = parseInt(page); i <= 20; i++) {
                 $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
             }
         }
