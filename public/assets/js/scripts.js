@@ -39,12 +39,13 @@ $("Document").ready(function() {
 
     function paginateItems(page, totalPages) {
         
-        if (parseInt(totalPages) < 20) {
-            for(let i = 1; i <= parseInt(totalPages); i++) {
+        if (totalPages < 20) {
+            for(let i = 1; i <= totalPages; i++) {
                 $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
             }
         } else {
-            for(let i = parseInt(page); i <= 20; i++) {
+            for(let i = page; i <= page + 20; i++) {
+                if (i > totalPages) break;
                 $("#pagination").append(`<button class="page-btn" data-val="${i}">${i}</button>`);
             }
         }
@@ -54,24 +55,34 @@ $("Document").ready(function() {
     function keywordSearch(url) {
         $("#results").empty();
         $("#pagination").empty();
-        page = "1";
+
         $.ajax({
             url: url,
             type: "GET"
         }).then(function(result) {
             let data = JSON.parse(result);
-            let items = data.findItemsByKeywordsResponse[0].searchResult[0].item;
-            page = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].pageNumber[0]);
-            let totalPages = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].totalPages[0]);
-            displayItems(items);
-            paginateItems(page, totalPages); 
+            if (document.location.pathname === "/find") {
+                let items = data.findItemsByKeywordsResponse[0].searchResult[0].item;
+                page = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].pageNumber[0]);
+                let totalPages = parseInt(data.findItemsByKeywordsResponse[0].paginationOutput[0].totalPages[0]);
+                displayItems(items);
+                paginateItems(page, totalPages); 
+            } else if (document.location.pathname === "/store") {
+                let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
+                page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
+                let totalPages = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0]);
+                displayItems(items);
+                paginateItems(page, totalPages); 
+            }
+            
+            
         });
     }
 
     function categorySearch(url) {
         $("#results").empty();
         $("#pagination").empty();
-        page = "1";
+        
         $.ajax({
             url: url,
             type: "GET"
@@ -79,7 +90,7 @@ $("Document").ready(function() {
             console.log(result);
             let data = JSON.parse(result);
             let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
-            let page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
+            page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
             let totalPages = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0]);
             displayItems(items);
             paginateItems(page, totalPages);
@@ -90,19 +101,28 @@ $("Document").ready(function() {
     $("#search-btn").on("click", function() {
         let input = $('#searchInput').val().trim();
         let keyword = input.replace(" ", "%20");
-        let url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
-        keywordSearch(url);
+        page = "1";
+
+        if (document.location.pathname === "/find") {
+            let url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
+            keywordSearch(url);
+        } else if (document.location.pathname === "/store") {
+            let url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
+            keywordSearch(url);
+        }
     });
 
     // Go to the next page of results
     $("#pagination").on("click", ".page-btn", function(e) {
-        page = $(e.target).data("val");   
+        page = $(this).data("val");
+
         if (document.location.pathname === "/find") {
             let input = $('#searchInput').val().trim();
             let keyword = input.replace(" ", "%20");
             url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
             keywordSearch(url);
         } else if (document.location.pathname === "/store") {
+            console.log(currentCategory + ", page# - " + page)
             url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
             categorySearch(url);
         }
@@ -112,6 +132,7 @@ $("Document").ready(function() {
     $("#category-buttons").on("click", ".category-btn", function() {
         currentCategory = $(this).data("val");
         let url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
+        page = "1";
         categorySearch(url);
     });
 
