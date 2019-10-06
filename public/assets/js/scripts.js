@@ -2,9 +2,8 @@ $("Document").ready(function() {
     
     const appID = "RyanAlld-ProjectT-PRD-5dfb0df12-1f10d5a8";
     const storeName = "Sally%27s%20Fine%20Vintage%20Toys"
-    let numPerPage = "20"; //results per page
-    let page = "1"; //default page = 1
-    let currentCategory = ""; // to keep trak of the category currently in use
+    let numPerPage = "20"; // set results per page
+    let page = 1; // default page #
 
     // URL building blocks
     let baseURL = `https://cors-anywhere.herokuapp.com/https://svcs.ebay.com/services/search/FindingService/v1?SERVICE-VERSION=1.13.0&SECURITY-APPNAME=${appID}&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD`;
@@ -12,8 +11,9 @@ $("Document").ready(function() {
     let findByKey = "&OPERATION-NAME=findItemsByKeywords";
     let findInStore = `&OPERATION-NAME=findItemsIneBayStores&storeName=${storeName}`;
     let paginate = `&paginationInput.entriesPerPage=${numPerPage}&paginationInput.pageNumber=`;
-    
+    let URL = "";
 
+    // Parse items object, format, and display
     function displayItems(items) {
         for(let i = 0; i < items.length; i++) {
             let title = items[i].title[0];
@@ -37,132 +37,76 @@ $("Document").ready(function() {
         }
     }
 
-    function paginateSearchItems(page, totalPages) {
+    // Display page buttons
+    function paginateItems(pageInfo) {
+        $("#pagination").empty();
+        let totalPages = parseInt(pageInfo.totalPages[0]);
+        console.log("page: " + page + ", total Pages: " + totalPages);
+
         if (totalPages < 20) {
             for(let i = 1; i <= totalPages; i++) {
                 $("#pagination").append(`<button class="page-key btn" data-val="${i}">${i}</button>`);
             }
         } else {
-            for(let i = page; i <= page + 19; i++) {
+            for(let i = page; i < page + 20; i++) {
                 if (i > totalPages) break;
                 $("#pagination").append(`<button class="page-key btn" data-val="${i}">${i}</button>`);
             }
         }
     }
 
-    function paginateCategoryItems(page, totalPages) {
-        if (totalPages < 20) {
-            for(let i = 1; i <= totalPages; i++) {
-                $("#pagination").append(`<button class="page-cat btn" data-val="${i}">${i}</button>`);
-            }
-        } else {
-            for(let i = page; i <= page + 19; i++) {
-                if (i > totalPages) break;
-                $("#pagination").append(`<button class="page-cat btn" data-val="${i}">${i}</button>`);
-            }
-        }
-    }
-    
-    function keywordSearch(url) {
+    // Query eBay API and get items
+    function getItems(url, operation) {
         $("#results").empty();
-        $("#pagination").empty();
 
         $.ajax({
             url: url,
             type: "GET"
         }).then(function(result) {
-            let data = JSON.parse(result);
-            page = data.findItemsByKeywordsResponse[0].paginationOutput[0].pageNumber[0];
-            let items = data.findItemsByKeywordsResponse[0].searchResult[0].item;
-            let totalPages = data.findItemsByKeywordsResponse[0].paginationOutput[0].totalPages[0];
+            let data = JSON.parse(result)[operation][0];
+            let items = data.searchResult[0].item;
+            let pageInfo = data.paginationOutput[0];
             
             displayItems(items);
-            paginateSearchItems(parseInt(page), parseInt(totalPages));
+            paginateItems(pageInfo);
         });
     }
 
-    function keywordStoreSearch(url) {
-        $("#results").empty();
-        $("#pagination").empty();
-
-        $.ajax({
-            url: url,
-            type: "GET"
-        }).then(function(result) {
-            let data = JSON.parse(result);
-            page = data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0];
-            let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
-            let totalPages = data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0];
-            
-            displayItems(items);
-            paginateSearchItems(parseInt(page), parseInt(totalPages));
-        });
-    }
-
-    function categorySearch(url) {
-        $("#results").empty();
-        $("#pagination").empty();
-        
-        $.ajax({
-            url: url,
-            type: "GET"
-        }).then(function(result) {
-            let data = JSON.parse(result);
-            let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
-            page = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].pageNumber[0]);
-            let totalPages = parseInt(data.findItemsIneBayStoresResponse[0].paginationOutput[0].totalPages[0]);
-            displayItems(items);
-            paginateCategoryItems(page, totalPages);
-        });
-    }
- 
-    // Search by keyword
+    // Search eBay by keyword
     $("#search-btn").on("click", function() {
-        page = "1";
+        page = 1;
         let keyword = $('#searchInput').val().trim().replace(" ", "%20");
-        let url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
-        keywordSearch(url);
+        URL = `${baseURL}${findByKey}&keywords=${keyword}${paginate}`;
+        getItems(URL + page, 'findItemsByKeywordsResponse');
     });
 
-    // Search the store by keyword
+    // Search store by keyword
     $("#store-search-btn").on("click", function() {
-        page = "1";
+        page = 1;
         let keyword = $('#searchInput').val().trim().replace(" ", "%20");
-        let url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
-        keywordStoreSearch(url);
+        URL = `${baseURL}${findInStore}&keywords=${keyword}${paginate}`;
+        getItems(URL + page, 'findItemsIneBayStoresResponse');
     }); 
 
-    // Category buttons on click, find all matching items in store
+    // Search store by category
     $("#category-buttons").on("click", ".category-btn", function() {
-        currentCategory = $(this).data("val");
-        page = "1";
-        let url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
-        categorySearch(url);
+        page = 1;
+        let category = $(this).data("val");
+        URL = `${baseURL}${findInStore}&categoryId=${category}${paginate}`;
+        getItems(URL + page, 'findItemsIneBayStoresResponse');
     });
 
     // Go to the next page of results
     $("#pagination").on("click", ".page-key", function() {
-        page = $(this).data("val");
-        let input = $('#searchInput').val().trim();
-        let keyword = input.replace(" ", "%20");
-        let url = "";
-
+        page = parseInt($(this).data("val"));
         if (document.location.pathname === "/find") {
-            url = `${baseURL}${findByKey}${paginate}${page}&keywords=${keyword}`;
-            keywordSearch(url);
+            getItems(URL + page, 'findItemsByKeywordsResponse');
         } else if (document.location.pathname === "/store") {
-            url = `${baseURL}${findInStore}${paginate}${page}&keywords=${keyword}`;
-            keywordStoreSearch(url);
+            getItems(URL + page, 'findItemsIneBayStoresResponse');
         }
     });
 
-    $("#pagination").on("click", ".page-cat", function() {
-        page = $(this).data("val");
-        url = `${baseURL}${findInStore}${paginate}${page}&categoryId=${currentCategory}`;
-        categorySearch(url);
-    });
-
-    // loop through store and create buttons for each unique category
+    // Find all unique categories in store and display buttons
     if (document.location.pathname === "/store") {
         console.log(document.location.pathname);
         let url = `${baseURL}${findInStore}`;
