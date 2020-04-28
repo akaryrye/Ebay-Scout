@@ -1,2 +1,7 @@
 # Project_Two
-Project Two for UC Davis Coding Bootcamp 2019
+
+Built with Express, Jquery, and Handlebars and utilizing the eBay API for data, this app allows one to search for items on my eBay store, or across the whole site.  Check it out and maybe you will find something you like (preferably from my own store).
+
+Thank you and I hope you enjoyed this app!
+
+Ryan K Alldrin
