@@ -1,7 +1,7 @@
 $("Document").ready(function() {
     
     const appID = "RyanAlld-ProjectT-PRD-5dfb0df12-1f10d5a8";
-    const storeName = "Sally%27s%20Fine%20Vintage%20Toys"
+    const storeName = "sallbarnet0";
     let numPerPage = "20"; // set results per page
     let page = 1; // default page #
 
