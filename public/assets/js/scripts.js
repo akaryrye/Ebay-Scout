@@ -6,10 +6,10 @@ $("Document").ready(function() {
     let page = 1; // default page #
 
     // URL building blocks
-    let baseURL = `https://cors-anywhere.herokuapp.com/https://svcs.ebay.com/services/search/FindingService/v1?SERVICE-VERSION=1.13.0&SECURITY-APPNAME=${appID}&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD`;
+    let baseURL = `https://cors-anywhere.herokuapp.com/https://svcs.ebay.com/services/search/FindingService/v1?SERVICE-VERSION=1.13.0&SECURITY-APPNAME=${appID}&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD=true`;
 
     let findByKey = "&OPERATION-NAME=findItemsByKeywords";
-    let findInStore = `&OPERATION-NAME=findItemsIneBayStores&storeName=${storeName}`;
+    let findInStore = `&OPERATION-NAME=findItemsAdvanced&itemFilter(0).name=Seller&itemFilter(0).value=${storeName}`;
     let paginate = `&paginationInput.entriesPerPage=${numPerPage}&paginationInput.pageNumber=`;
     let URL = "";
 
@@ -85,7 +85,7 @@ $("Document").ready(function() {
         page = 1;
         let keyword = $('#searchInput').val().trim().replace(" ", "%20");
         URL = `${baseURL}${findInStore}&keywords=${keyword}${paginate}`;
-        getItems(URL + page, 'findItemsIneBayStoresResponse');
+        getItems(URL + page, 'findItemsAdvancedResponse');
     }); 
 
     // Search store by category
@@ -93,7 +93,7 @@ $("Document").ready(function() {
         page = 1;
         let category = $(this).data("val");
         URL = `${baseURL}${findInStore}&categoryId=${category}${paginate}`;
-        getItems(URL + page, 'findItemsIneBayStoresResponse');
+        getItems(URL + page, 'findItemsAdvancedResponse');
     });
 
     // Go to the next page of results
@@ -102,7 +102,7 @@ $("Document").ready(function() {
         if (document.location.pathname === "/find") {
             getItems(URL + page, 'findItemsByKeywordsResponse');
         } else if (document.location.pathname === "/store") {
-            getItems(URL + page, 'findItemsIneBayStoresResponse');
+            getItems(URL + page, 'findItemsAdvancedResponse');
         }
     });
 
@@ -115,7 +115,7 @@ $("Document").ready(function() {
             type: "GET"
         }).then(function(result) {
             let data = JSON.parse(result);
-            let items = data.findItemsIneBayStoresResponse[0].searchResult[0].item;
+            let items = data.findItemsAdvancedResponse[0].searchResult[0].item;
             let categories = [];
             
             for (let i = 0; i < items.length; i++) {
